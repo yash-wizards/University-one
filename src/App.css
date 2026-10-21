@@ -426,6 +426,37 @@
   font-size: 0.9rem;
 }
 
+/* Ambassador iframe embed */
+.ambassador {
+  background: var(--white);
+}
+
+.ambassador-frame-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.ambassador-frame {
+  display: block;
+  width: 100%;
+  height: min(80vh, 800px);
+  min-height: 640px;
+  border: 0;
+  background: var(--white);
+}
+
+.ambassador-status {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  background: var(--surface-alt);
+}
+
 /* Apply */
 .apply {
   background:
@@ -615,5 +646,10 @@
 
   .section {
     padding: 3.5rem 0;
+  }
+
+  .ambassador-frame {
+    height: 70vh;
+    min-height: 520px;
   }
 }

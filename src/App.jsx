@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import {
   advantages,
@@ -9,6 +9,9 @@ import {
   stats,
   stories,
 } from "./data";
+
+const AMBASSADOR_ORIGIN = "https://external-ambassador.vercel.app";
+const AMBASSADOR_SRC = `${AMBASSADOR_ORIGIN}/external-ambassador`;
 
 function Header() {
   return (
@@ -230,6 +233,77 @@ function Stories() {
   );
 }
 
+function AmbassadorEmbed() {
+  const frameRef = useRef(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    function onMessage(event) {
+      if (event.origin !== AMBASSADOR_ORIGIN) return;
+      if (event.data?.type === "intoto:ready") {
+        setReady(true);
+      }
+    }
+
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
+  function pingAmbassador() {
+    frameRef.current?.contentWindow?.postMessage(
+      { type: "intoto:ping" },
+      AMBASSADOR_ORIGIN,
+    );
+  }
+
+  useEffect(() => {
+    if (ready) return undefined;
+    const timers = [200, 600, 1200].map((ms) =>
+      window.setTimeout(pingAmbassador, ms),
+    );
+    const interval = window.setInterval(pingAmbassador, 1500);
+    return () => {
+      timers.forEach((id) => window.clearTimeout(id));
+      window.clearInterval(interval);
+    };
+  }, [ready]);
+
+  function handleFrameLoad() {
+    pingAmbassador();
+  }
+
+  return (
+    <section className="section ambassador" id="ambassadors">
+      <div className="container">
+        <div className="section-head">
+          <h2>Talk to student ambassadors</h2>
+          <p>
+            Ask current students and alumni about courses, campus life, and
+            admissions — embedded from INTOTO External Ambassador.
+          </p>
+        </div>
+        <div className="ambassador-frame-wrap">
+          <iframe
+            ref={frameRef}
+            className="ambassador-frame"
+            src={AMBASSADOR_SRC}
+            title="INTOTO External Ambassador"
+            width="100%"
+            height="800"
+            allow="clipboard-write; popups"
+            onLoad={handleFrameLoad}
+          />
+          <p className="ambassador-status" role="status" aria-live="polite">
+            {ready
+              ? "Ambassador app is ready inside the iframe."
+              : "Loading ambassador experience…"}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ApplySection() {
   const [submitted, setSubmitted] = useState(false);
 
@@ -327,6 +401,7 @@ function Footer() {
             <a href="#rankings">Rankings</a>
             <a href="#advantages">Advantages</a>
             <a href="#stories">Stories</a>
+            <a href="#ambassadors">Ambassadors</a>
             <a href="#apply">Apply</a>
           </nav>
         </div>
@@ -351,6 +426,7 @@ export default function App() {
         <Courses />
         <Advantages />
         <Stories />
+        <AmbassadorEmbed />
         <ApplySection />
       </main>
       <Footer />
