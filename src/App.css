@@ -432,7 +432,7 @@
 }
 
 .ambassador-frame-wrap {
-  width: min(100% - 2rem, 1560px);
+  width: 80%;
   margin-inline: auto;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -449,15 +449,6 @@
   min-height: 640px;
   border: 0;
   background: var(--white);
-}
-
-.ambassador-status {
-  margin: 0;
-  padding: 0.75rem 1rem;
-  border-top: 1px solid var(--line);
-  font-size: 0.85rem;
-  color: var(--ink-muted);
-  background: var(--surface-alt);
 }
 
 /* Apply */
@@ -649,6 +640,10 @@
 
   .section {
     padding: 3.5rem 0;
+  }
+
+  .ambassador-frame-wrap {
+    width: calc(100% - 2rem);
   }
 
   .ambassador-frame {

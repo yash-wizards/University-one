@@ -309,11 +309,6 @@ function AmbassadorEmbed() {
           allowFullScreen
           onLoad={handleFrameLoad}
         />
-        <p className="ambassador-status" role="status" aria-live="polite">
-          {ready
-            ? "Ambassador app is ready inside the iframe."
-            : "Loading ambassador experience…"}
-        </p>
       </div>
     </section>
   );
