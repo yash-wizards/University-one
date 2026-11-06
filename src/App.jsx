@@ -10,8 +10,22 @@ import {
   stories,
 } from "./data";
 
-const AMBASSADOR_ORIGIN = "https://external-ambassador.vercel.app";
-const AMBASSADOR_SRC = `${AMBASSADOR_ORIGIN}/external-ambassador`;
+const AMBASSADOR_ORIGIN = "https://sbs-university.amp.dev.intoto.ca";
+const AMBASSADOR_SRC = `${AMBASSADOR_ORIGIN}/`;
+const AMBASSADOR_ALLOW = [
+  "camera",
+  "microphone",
+  "autoplay",
+  "display-capture",
+  "speaker-selection",
+  "fullscreen",
+  "picture-in-picture",
+  "clipboard-read",
+  "clipboard-write",
+  "geolocation",
+  "encrypted-media",
+  "web-share",
+].join("; ");
 
 function Header() {
   return (
@@ -282,23 +296,24 @@ function AmbassadorEmbed() {
             admissions — embedded from INTOTO External Ambassador.
           </p>
         </div>
-        <div className="ambassador-frame-wrap">
-          <iframe
-            ref={frameRef}
-            className="ambassador-frame"
-            src={AMBASSADOR_SRC}
-            title="INTOTO External Ambassador"
-            width="100%"
-            height="800"
-            allow="clipboard-write; popups"
-            onLoad={handleFrameLoad}
-          />
-          <p className="ambassador-status" role="status" aria-live="polite">
-            {ready
-              ? "Ambassador app is ready inside the iframe."
-              : "Loading ambassador experience…"}
-          </p>
-        </div>
+      </div>
+      <div className="ambassador-frame-wrap">
+        <iframe
+          ref={frameRef}
+          className="ambassador-frame"
+          src={AMBASSADOR_SRC}
+          title="INTOTO External Ambassador"
+          width="100%"
+          height="800"
+          allow={AMBASSADOR_ALLOW}
+          allowFullScreen
+          onLoad={handleFrameLoad}
+        />
+        <p className="ambassador-status" role="status" aria-live="polite">
+          {ready
+            ? "Ambassador app is ready inside the iframe."
+            : "Loading ambassador experience…"}
+        </p>
       </div>
     </section>
   );
