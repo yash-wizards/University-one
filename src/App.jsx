@@ -10,8 +10,8 @@ import {
   stories,
 } from "./data";
 
-const AMBASSADOR_ORIGIN = "https://sbs-university.amp.dev.intoto.ca";
-const AMBASSADOR_SRC = `${AMBASSADOR_ORIGIN}/`;
+const AMBASSADOR_ORIGIN = "https://toronto-university.amp.stage.intoto.ca";
+const AMBASSADOR_SRC = `${AMBASSADOR_ORIGIN}/?embedHeight=auto`;
 const AMBASSADOR_ALLOW = [
   "camera",
   "microphone",
@@ -256,6 +256,15 @@ function AmbassadorEmbed() {
       if (event.origin !== AMBASSADOR_ORIGIN) return;
       if (event.data?.type === "intoto:ready") {
         setReady(true);
+        return;
+      }
+      if (
+        event.data?.type === "intoto:resize" &&
+        typeof event.data.height === "number" &&
+        Number.isFinite(event.data.height)
+      ) {
+        const iframe = frameRef.current;
+        if (iframe) iframe.style.height = `${event.data.height}px`;
       }
     }
 
@@ -299,6 +308,7 @@ function AmbassadorEmbed() {
       </div>
       <div className="ambassador-frame-wrap">
         <iframe
+          id="intoto-amp"
           ref={frameRef}
           className="ambassador-frame"
           src={AMBASSADOR_SRC}
