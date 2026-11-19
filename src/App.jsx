@@ -10,8 +10,10 @@ import {
   stories,
 } from "./data";
 
-const AMBASSADOR_ORIGIN = "https://sbs-university.amp.dev.intoto.ca";
+const AMBASSADOR_ORIGIN = "https://toronto-university.amp.stage.intoto.ca";
 const AMBASSADOR_SRC = `${AMBASSADOR_ORIGIN}/?embedHeight=auto`;
+/** One script from amp — a11y + logout on parent body, resize, viewport */
+const AMBASSADOR_HOST_SCRIPT = `${AMBASSADOR_ORIGIN}/embed-host.js`;
 const AMBASSADOR_ALLOW = [
   "camera",
   "microphone",
@@ -247,30 +249,46 @@ function Stories() {
   );
 }
 
+function loadIntotoEmbedHost() {
+  return new Promise((resolve, reject) => {
+    if (window.IntotoEmbed?.bind) {
+      resolve(window.IntotoEmbed);
+      return;
+    }
+    const existing = document.querySelector(`script[src="${AMBASSADOR_HOST_SCRIPT}"]`);
+    if (existing) {
+      existing.addEventListener("load", () => resolve(window.IntotoEmbed));
+      existing.addEventListener("error", reject);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = AMBASSADOR_HOST_SCRIPT;
+    script.async = true;
+    script.onload = () => resolve(window.IntotoEmbed);
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
 function AmbassadorEmbed() {
   const frameRef = useRef(null);
 
   useEffect(() => {
-    function onMessage(event) {
-      if (event.origin !== AMBASSADOR_ORIGIN) return;
-      const data = event.data;
-      if (!data || typeof data !== "object") return;
-      if (data.type === "intoto:resize" && typeof data.height === "number") {
-        const iframe = frameRef.current;
-        if (iframe) iframe.style.height = `${Math.max(data.height, 1)}px`;
-      }
-    }
-
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
+    let destroyed = false;
+    let handle = null;
+    loadIntotoEmbedHost()
+      .then((api) => {
+        if (destroyed || !frameRef.current || !api?.bind) return;
+        handle = api.bind(frameRef.current);
+      })
+      .catch((err) => {
+        console.warn("[IntotoEmbed] host script failed to load", err);
+      });
+    return () => {
+      destroyed = true;
+      handle?.destroy?.();
+    };
   }, []);
-
-  function requestHeight() {
-    frameRef.current?.contentWindow?.postMessage(
-      { type: "intoto:resize-request", version: 1 },
-      AMBASSADOR_ORIGIN,
-    );
-  }
 
   return (
     <section className="section ambassador" id="ambassadors">
@@ -294,7 +312,6 @@ function AmbassadorEmbed() {
           scrolling="no"
           allow={AMBASSADOR_ALLOW}
           allowFullScreen
-          onLoad={requestHeight}
         />
       </div>
     </section>
