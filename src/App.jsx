@@ -10,7 +10,7 @@ import {
   stories,
 } from "./data";
 
-const AMBASSADOR_ORIGIN = "https://toronto-university.amp.stage.intoto.ca";
+const AMBASSADOR_ORIGIN = "https://sbs-university.amp.dev.intoto.ca";
 const AMBASSADOR_SRC = `${AMBASSADOR_ORIGIN}/?embedHeight=auto`;
 const AMBASSADOR_ALLOW = [
   "camera",
@@ -249,22 +249,15 @@ function Stories() {
 
 function AmbassadorEmbed() {
   const frameRef = useRef(null);
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     function onMessage(event) {
       if (event.origin !== AMBASSADOR_ORIGIN) return;
-      if (event.data?.type === "intoto:ready") {
-        setReady(true);
-        return;
-      }
-      if (
-        event.data?.type === "intoto:resize" &&
-        typeof event.data.height === "number" &&
-        Number.isFinite(event.data.height)
-      ) {
+      const data = event.data;
+      if (!data || typeof data !== "object") return;
+      if (data.type === "intoto:resize" && typeof data.height === "number") {
         const iframe = frameRef.current;
-        if (iframe) iframe.style.height = `${event.data.height}px`;
+        if (iframe) iframe.style.height = `${Math.max(data.height, 1)}px`;
       }
     }
 
@@ -272,27 +265,11 @@ function AmbassadorEmbed() {
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
-  function pingAmbassador() {
+  function requestHeight() {
     frameRef.current?.contentWindow?.postMessage(
-      { type: "intoto:ping" },
+      { type: "intoto:resize-request", version: 1 },
       AMBASSADOR_ORIGIN,
     );
-  }
-
-  useEffect(() => {
-    if (ready) return undefined;
-    const timers = [200, 600, 1200].map((ms) =>
-      window.setTimeout(pingAmbassador, ms),
-    );
-    const interval = window.setInterval(pingAmbassador, 1500);
-    return () => {
-      timers.forEach((id) => window.clearTimeout(id));
-      window.clearInterval(interval);
-    };
-  }, [ready]);
-
-  function handleFrameLoad() {
-    pingAmbassador();
   }
 
   return (
@@ -314,10 +291,10 @@ function AmbassadorEmbed() {
           src={AMBASSADOR_SRC}
           title="INTOTO External Ambassador"
           width="100%"
-          height="800"
+          scrolling="no"
           allow={AMBASSADOR_ALLOW}
           allowFullScreen
-          onLoad={handleFrameLoad}
+          onLoad={requestHeight}
         />
       </div>
     </section>
