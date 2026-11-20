@@ -10,8 +10,8 @@ import {
   stories,
 } from "./data";
 
-// const AMBASSADOR_ORIGIN = "https://toronto-university.amp.stage.intoto.ca";
-const AMBASSADOR_ORIGIN = "http://sbs-university.localhost:3001";
+const AMBASSADOR_ORIGIN = "https://toronto-university.amp.stage.intoto.ca";
+// const AMBASSADOR_ORIGIN = "http://sbs-university.localhost:3001";
 const AMBASSADOR_SRC = `${AMBASSADOR_ORIGIN}/?embedHeight=auto`;
 /** One script from amp — a11y + logout on parent body, resize, viewport */
 // Bust cache so university always picks up latest host modal/fade behavior.
