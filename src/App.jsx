@@ -10,10 +10,12 @@ import {
   stories,
 } from "./data";
 
-const AMBASSADOR_ORIGIN = "https://toronto-university.amp.stage.intoto.ca";
+// const AMBASSADOR_ORIGIN = "https://toronto-university.amp.stage.intoto.ca";
+const AMBASSADOR_ORIGIN = "http://sbs-university.localhost:3001";
 const AMBASSADOR_SRC = `${AMBASSADOR_ORIGIN}/?embedHeight=auto`;
 /** One script from amp — a11y + logout on parent body, resize, viewport */
-const AMBASSADOR_HOST_SCRIPT = `${AMBASSADOR_ORIGIN}/embed-host.js`;
+// Bust cache so university always picks up latest host modal/fade behavior.
+const AMBASSADOR_HOST_SCRIPT = `${AMBASSADOR_ORIGIN}/embed-host.js?v=20261120`;
 const AMBASSADOR_ALLOW = [
   "camera",
   "microphone",
