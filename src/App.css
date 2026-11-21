@@ -426,9 +426,16 @@
   font-size: 0.9rem;
 }
 
-/* Ambassador iframe embed */
+/* Ambassador iframe embed (home browse); actions open AMP in a new tab */
 .ambassador {
   background: var(--white);
+  /* Tighter than other .section blocks — AMP brings its own padding. */
+  padding-top: 3.5rem;
+  padding-bottom: 0;
+}
+
+.ambassador .section-head {
+  margin-bottom: 1rem;
 }
 
 .ambassador-frame-wrap {
@@ -441,12 +448,15 @@
   box-shadow: none;
 }
 
-.ambassador-frame {
+.ambassador-frame,
+.ambassador-frame iframe {
   display: block;
   width: 100%;
   border: 0;
   overflow: hidden;
   background: var(--white);
+  /* Small stub until amp posts real height — avoid a huge empty white band. */
+  min-height: 0;
 }
 
 /* Apply */

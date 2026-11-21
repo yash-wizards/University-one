@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import {
   advantages,
@@ -13,23 +13,9 @@ import {
 const AMBASSADOR_ORIGIN = "https://toronto-university.amp.stage.intoto.ca";
 // const AMBASSADOR_ORIGIN = "http://sbs-university.localhost:3001";
 // const AMBASSADOR_ORIGIN = "https://sbs-university.amp.dev.intoto.ca";
-const AMBASSADOR_SRC = `${AMBASSADOR_ORIGIN}/?embedHeight=auto`;
-/** One script from amp — a11y + logout on parent body, resize, viewport */
-const AMBASSADOR_HOST_SCRIPT = `${AMBASSADOR_ORIGIN}/embed-host.js?v=20261121f`;
-const AMBASSADOR_ALLOW = [
-  "camera",
-  "microphone",
-  "autoplay",
-  "display-capture",
-  "speaker-selection",
-  "fullscreen",
-  "picture-in-picture",
-  "clipboard-read",
-  "clipboard-write",
-  "geolocation",
-  "encrypted-media",
-  "web-share",
-].join("; ");
+
+/** One script from amp — creates iframe + resize / logout / a11y / report on the parent page */
+const AMBASSADOR_HOST_SCRIPT = `${AMBASSADOR_ORIGIN}/embed-host.js?v=20261121j`;
 
 function Header() {
   return (
@@ -251,45 +237,18 @@ function Stories() {
   );
 }
 
-function loadIntotoEmbedHost() {
-  return new Promise((resolve, reject) => {
-    if (window.IntotoEmbed?.bind) {
-      resolve(window.IntotoEmbed);
-      return;
-    }
-    const existing = document.querySelector(`script[src="${AMBASSADOR_HOST_SCRIPT}"]`);
-    if (existing) {
-      existing.addEventListener("load", () => resolve(window.IntotoEmbed));
-      existing.addEventListener("error", reject);
-      return;
-    }
+/**
+ * Client-style embed: one mount node + one script.
+ * embed-host.js auto-creates the iframe and wires resize / overlays.
+ * Homepage stays in the iframe; login / chat open full AMP in a new tab.
+ */
+function AmbassadorEmbed() {
+  useEffect(() => {
+    if (document.querySelector(`script[src="${AMBASSADOR_HOST_SCRIPT}"]`)) return;
     const script = document.createElement("script");
     script.src = AMBASSADOR_HOST_SCRIPT;
     script.async = true;
-    script.onload = () => resolve(window.IntotoEmbed);
-    script.onerror = reject;
     document.head.appendChild(script);
-  });
-}
-
-function AmbassadorEmbed() {
-  const frameRef = useRef(null);
-
-  useEffect(() => {
-    let destroyed = false;
-    let handle = null;
-    loadIntotoEmbedHost()
-      .then((api) => {
-        if (destroyed || !frameRef.current || !api?.bind) return;
-        handle = api.bind(frameRef.current);
-      })
-      .catch((err) => {
-        console.warn("[IntotoEmbed] host script failed to load", err);
-      });
-    return () => {
-      destroyed = true;
-      handle?.destroy?.();
-    };
   }, []);
 
   return (
@@ -304,15 +263,10 @@ function AmbassadorEmbed() {
         </div>
       </div>
       <div className="ambassador-frame-wrap">
-        <iframe
+        <div
           id="intoto-amp"
-          ref={frameRef}
           className="ambassador-frame"
-          src={AMBASSADOR_SRC}
-          title="INTOTO External Ambassador"
-          width="100%"
-          allow={AMBASSADOR_ALLOW}
-          allowFullScreen
+          data-intoto-embed={AMBASSADOR_ORIGIN}
         />
       </div>
     </section>
