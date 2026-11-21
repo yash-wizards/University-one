@@ -10,12 +10,13 @@ import {
   stories,
 } from "./data";
 
-const AMBASSADOR_ORIGIN = "https://toronto-university.amp.stage.intoto.ca";
+// const AMBASSADOR_ORIGIN = "https://toronto-university.amp.stage.intoto.ca";
 // const AMBASSADOR_ORIGIN = "http://sbs-university.localhost:3001";
-// const AMBASSADOR_ORIGIN = "https://sbs-university.amp.dev.intoto.ca";
+const AMBASSADOR_ORIGIN = "https://sbs-university.amp.dev.intoto.ca";
 
-/** One script from amp — creates iframe + resize / logout / a11y / report on the parent page */
-const AMBASSADOR_HOST_SCRIPT = `${AMBASSADOR_ORIGIN}/embed-host.js?v=20261121j`;
+/** One script from amp — creates iframe + resize / logout / a11y / report on the parent page.
+ *  Bump `v=` whenever amp redeploys embed-host.js (CloudFront serves it immutable). */
+const AMBASSADOR_HOST_SCRIPT = `${AMBASSADOR_ORIGIN}/embed-host.js?v=20261122a`;
 
 function Header() {
   return (
@@ -238,17 +239,90 @@ function Stories() {
 }
 
 /**
- * Client-style embed: one mount node + one script.
- * embed-host.js auto-creates the iframe and wires resize / overlays.
+ * Client-style embed: mount node + amp embed-host.js.
+ * Works with BOTH host script versions:
+ * - New: autoMount() builds the iframe from data-intoto-embed
+ * - Old (still on some amp.dev CDNs): bind() expects a real <iframe>
  * Homepage stays in the iframe; login / chat open full AMP in a new tab.
  */
 function AmbassadorEmbed() {
   useEffect(() => {
-    if (document.querySelector(`script[src="${AMBASSADOR_HOST_SCRIPT}"]`)) return;
+    let cancelled = false;
+    let handle = null;
+
+    const ampSrc = () => {
+      try {
+        const url = new URL(AMBASSADOR_ORIGIN);
+        if (!url.searchParams.has("embedHeight")) {
+          url.searchParams.set("embedHeight", "auto");
+        }
+        return url.toString();
+      } catch {
+        return AMBASSADOR_ORIGIN;
+      }
+    };
+
+    const mount = () => {
+      if (cancelled || !window.IntotoEmbed) return;
+      const node = document.getElementById("intoto-amp");
+      if (!node) return;
+
+      // Prefer new host API when amp has redeployed embed-host.js
+      if (typeof window.IntotoEmbed.autoMount === "function") {
+        window.IntotoEmbed.autoMount(document);
+        return;
+      }
+
+      // Legacy host: only exposes bind(iframe)
+      if (typeof window.IntotoEmbed.bind !== "function") return;
+      let iframe = node.querySelector("iframe");
+      if (!iframe) {
+        iframe = document.createElement("iframe");
+        iframe.title = "INTOTO Ambassadors";
+        iframe.setAttribute("width", "100%");
+        iframe.setAttribute(
+          "allow",
+          "camera; microphone; autoplay; clipboard-read; clipboard-write; fullscreen",
+        );
+        iframe.setAttribute("allowfullscreen", "");
+        iframe.style.border = "0";
+        iframe.style.display = "block";
+        iframe.style.width = "100%";
+        iframe.style.minHeight = "120px";
+        iframe.src = ampSrc();
+        node.appendChild(iframe);
+      }
+      handle = window.IntotoEmbed.bind(iframe);
+    };
+
+    const existing = document.querySelector(
+      `script[src="${AMBASSADOR_HOST_SCRIPT}"]`,
+    );
+    if (existing) {
+      if (window.IntotoEmbed) mount();
+      else existing.addEventListener("load", mount);
+      return () => {
+        cancelled = true;
+        handle?.destroy?.();
+      };
+    }
+
     const script = document.createElement("script");
     script.src = AMBASSADOR_HOST_SCRIPT;
     script.async = true;
+    script.onload = mount;
+    script.onerror = () => {
+      console.error(
+        "[University] Failed to load Intoto embed-host.js from",
+        AMBASSADOR_HOST_SCRIPT,
+      );
+    };
     document.head.appendChild(script);
+
+    return () => {
+      cancelled = true;
+      handle?.destroy?.();
+    };
   }, []);
 
   return (
