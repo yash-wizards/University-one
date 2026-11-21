@@ -10,9 +10,9 @@ import {
   stories,
 } from "./data";
 
-// const AMBASSADOR_ORIGIN = "https://toronto-university.amp.stage.intoto.ca";
+const AMBASSADOR_ORIGIN = "https://toronto-university.amp.stage.intoto.ca";
 // const AMBASSADOR_ORIGIN = "http://sbs-university.localhost:3001";
-const AMBASSADOR_ORIGIN = "https://sbs-university.amp.dev.intoto.ca";
+// const AMBASSADOR_ORIGIN = "https://sbs-university.amp.dev.intoto.ca";
 
 /** One script from amp — creates iframe + resize / logout / a11y / report on the parent page.
  *  Bump `v=` whenever amp redeploys embed-host.js (CloudFront serves it immutable). */
